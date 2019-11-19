@@ -1,0 +1,39 @@
+---
+title: "US Storm Survey"
+output: 
+  html_document:
+    keep_md: true
+header-includes:
+   - \usepackage[russian]{babel}
+---
+
+## Synopsis. 
+
+What have been done and what results we have. 
+
+
+
+## Data Processing
+
+We will need ggplot2 and data.table libraries, let's go load them:
+
+```{r}
+library(data.table)
+library(ggplot2)
+```
+
+### Obtaining data
+
+In this survey we will use National Weather Service Storm Data. At first we need the data itself, let's download and read it. 
+
+```{r}
+file_url = "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+dest_file = ".\\data\\storm_data.csv.bz2"
+if(!file.exists(dest_file)){
+    download.file(file_url, dest_file)
+}
+st_data = read.csv(dest_file)
+```
+
+
+
