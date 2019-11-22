@@ -185,22 +185,101 @@ summary {
 <h2>Synopsis.</h2>
 <p>What have been done and what results we have.</p>
 </div>
-<div id="data-processing" class="section level2">
-<h2>Data Processing</h2>
+<div id="obtaining-data" class="section level2">
+<h2>Obtaining data</h2>
 <p>We will need ggplot2 and data.table libraries, let’s go load them:</p>
 <pre class="r"><code>library(data.table)</code></pre>
 <pre><code>## Warning: package 'data.table' was built under R version 3.6.1</code></pre>
 <pre class="r"><code>library(ggplot2)</code></pre>
 <pre><code>## Warning: package 'ggplot2' was built under R version 3.6.1</code></pre>
-<div id="obtaining-data" class="section level3">
-<h3>Obtaining data</h3>
-<p>In this survey we will use National Weather Service Storm Data. At first we need the data itself, let’s download and read it.</p>
+<p>In this survey we will use National Weather Service Storm Data. At first we need the data itself, the following code will download and read it.</p>
 <pre class="r"><code>file_url = &quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2&quot;
 dest_file = &quot;.\\data\\storm_data.csv.bz2&quot;
 if(!file.exists(dest_file)){
     download.file(file_url, dest_file)
 }
-st_data = read.csv(dest_file)</code></pre>
+st_data = as.data.table(read.csv(dest_file))</code></pre>
+</div>
+<div id="data-processing" class="section level2">
+<h2>Data Processing</h2>
+<div id="health-casualties" class="section level3">
+<h3>Health casualties</h3>
+<p>We will split health casualties into two types. First one is deaths and second one is injuries. Our goal is to find out what type of events (EVTYPE) are most dangerous, i.e. lead to the highest deaths and injuries rate.</p>
+<p>Here is calculation amount of deaths for each event…:</p>
+<pre class="r"><code>fatalities_dt = st_data[, list(Total.Fatalities = sum(FATALITIES)), by = EVTYPE]
+setorder(fatalities_dt, -Total.Fatalities, na.last = T)
+head(fatalities_dt, n = 10)</code></pre>
+<pre><code>##             EVTYPE Total.Fatalities
+##  1:        TORNADO             5633
+##  2: EXCESSIVE HEAT             1903
+##  3:    FLASH FLOOD              978
+##  4:           HEAT              937
+##  5:      LIGHTNING              816
+##  6:      TSTM WIND              504
+##  7:          FLOOD              470
+##  8:    RIP CURRENT              368
+##  9:      HIGH WIND              248
+## 10:      AVALANCHE              224</code></pre>
+<p>… and calculation amount of injuries for each event:</p>
+<pre class="r"><code>injuries_dt = st_data[, list(Total.Injuries = sum(INJURIES)), by = EVTYPE]
+setorder(injuries_dt, -Total.Injuries, na.last = T)
+head(injuries_dt, n = 10)</code></pre>
+<pre><code>##                EVTYPE Total.Injuries
+##  1:           TORNADO          91346
+##  2:         TSTM WIND           6957
+##  3:             FLOOD           6789
+##  4:    EXCESSIVE HEAT           6525
+##  5:         LIGHTNING           5230
+##  6:              HEAT           2100
+##  7:         ICE STORM           1975
+##  8:       FLASH FLOOD           1777
+##  9: THUNDERSTORM WIND           1488
+## 10:              HAIL           1361</code></pre>
+</div>
+<div id="ecomomic-impact" class="section level3">
+<h3>Ecomomic impact</h3>
+<p>In Storm Dataset we can find two types of economic impact, property damage (PROPDMG) and crop damage (CROPDMG). Moreover, this dataset also has two more variables: PROPDMGEXP and CROPDMGEXP, which are coefficients (multipliers) for corresponding value. They can be interpreted as following:<br />
+b, B &lt;-&gt; billion (x1.000.000.000)<br />
+m, M &lt;-&gt; million (x1.000.000)<br />
+k, K &lt;-&gt; thousand (x1000)<br />
+h, H &lt;-&gt; hundred (x100)<br />
+(+) &lt;-&gt; (x1)<br />
+(-) &lt;-&gt; (x0)<br />
+(?) &lt;-&gt; (x0)<br />
+blank field &lt;-&gt; (x0)</p>
+<p>This code provides a calculation of actual damage is USD for each event:</p>
+<pre class="r"><code>EXP = sort(unique(as.character(st_data$PROPDMGEXP)))
+coefficient &lt;- c(0,0,0,1,10,10,10,10,10,10,10,10,10,10^9,10^2,10^2,10^3,10^6,10^6)
+convert = data.table(&quot;EXP&quot; = EXP, &quot;coefficient&quot; = coefficient)
+
+damage_dt = st_data[, c(&quot;EVTYPE&quot;, &quot;PROPDMG&quot;, &quot;PROPDMGEXP&quot;, &quot;CROPDMG&quot;, &quot;CROPDMGEXP&quot;)]
+
+damage_dt$PROPCOEFFICIENT = convert$coefficient[match(damage_dt$PROPDMGEXP, convert$EXP)]
+damage_dt$CROPCOEFFICIENT = convert$coefficient[match(damage_dt$CROPDMGEXP, convert$EXP)]
+damage_dt$PROPDMG = damage_dt$PROPDMG * damage_dt$PROPCOEFFICIENT
+damage_dt$CROPDMG = damage_dt$CROPDMG * damage_dt$CROPCOEFFICIENT
+damage_dt$TOTAL = damage_dt$PROPDMG + damage_dt$CROPDMG
+
+total_dmg_dt = damage_dt[, list(Total = sum(TOTAL)), by = EVTYPE]
+setorder(total_dmg_dt, -Total, na.last = T)
+head(total_dmg_dt, n = 10)</code></pre>
+<pre><code>##                EVTYPE        Total
+##  1:             FLOOD 150319678250
+##  2: HURRICANE/TYPHOON  71913712800
+##  3:           TORNADO  57352117607
+##  4:       STORM SURGE  43323541000
+##  5:       FLASH FLOOD  17562132111
+##  6:           DROUGHT  15018672000
+##  7:         HURRICANE  14610229010
+##  8:       RIVER FLOOD  10148404500
+##  9:         ICE STORM   8967041810
+## 10:    TROPICAL STORM   8382236550</code></pre>
+</div>
+</div>
+<div id="results" class="section level2">
+<h2>Results</h2>
+<div id="health-impact" class="section level3">
+<h3>Health impact</h3>
 </div>
 </div>
 
