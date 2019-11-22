@@ -7,9 +7,10 @@ header-includes:
    - \usepackage[russian]{babel}
 ---
 
-## Synopsis. 
+## Synopsis  
 
-This survey focuses on health and ecinomic impacts of natural disasters. It is based on National Weather Service Storm Data and its goal is to answer two questions:
+This survey focuses on health and economic impacts of natural disasters. It is based on National Weather Service Storm Data and its goal is to answer two questions:  
+
 * Which types of events are most harmful for USA population health?
 * Which types of events have the greatest economic consequences?
 
@@ -40,7 +41,7 @@ st_data = as.data.table(read.csv(dest_file))
 
 ### Health casualties
 
-We will split health casualties into two types. First one is deaths and second one is injuries. Our goal is to find out what type of events (EVTYPE) are most dangerous, i.e. lead to the highest deaths and injuries rate. 
+We will split health casualties into two types. First one is deaths and second one is injuries. Our goal is to find out what type of events (EVTYPE) are most dangerous, i.e. leads to the highest deaths and injuries rate. 
 
 Here is calculation amount of deaths for each event...:
 
@@ -96,7 +97,7 @@ head(total_dmg_dt, n = 10)
 
 The best way to realize results is to visualize them.  
 
-On two following plots top-10 event with highest death and injuries rate are show:
+On two following plots top-10 event with highest death and injuries rate are shown:
 
 ```{r}
 plot = ggplot(data = fatalities_dt[1:10,], 
@@ -118,9 +119,9 @@ plot = ggplot(data = injuries_dt[1:10,],
 print(plot)
 ```
 
-As we can see, tornados are the most dangerous disasters for people.
+As we can see, tornados are the most dangerous disasters for population.
 
-Next let's take a look at plot of top-10 events with highest ecinomis impact:
+Next let's take a look at plot of top-10 events with highest economic impact:
 
 ```{r}
 plot = ggplot(data = total_dmg_dt[1:10,], 

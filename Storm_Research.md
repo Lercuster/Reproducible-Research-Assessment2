@@ -7,10 +7,14 @@ header-includes:
    - \usepackage[russian]{babel}
 ---
 
-## Synopsis. 
+## Synopsis  
 
-What have been done and what results we have. 
+This survey focuses on health and economic impacts of natural disasters. It is based on National Weather Service Storm Data and its goal is to answer two questions:  
 
+* Which types of events are most harmful for USA population health?
+* Which types of events have the greatest economic consequences?
+
+This paper provides result of this survey as well as R language code for data processing. 
 
 
 ##  Obtaining data
@@ -20,21 +24,10 @@ We will need ggplot2 and data.table libraries, let's go load them:
 
 ```r
 library(data.table)
-```
-
-```
-## Warning: package 'data.table' was built under R version 3.6.1
-```
-
-```r
 library(ggplot2)
 ```
 
-```
-## Warning: package 'ggplot2' was built under R version 3.6.1
-```
-
-In this survey we will use National Weather Service Storm Data. At first we need the data itself, the following code will download and read it. 
+As we said, in this survey we will use National Weather Service Storm Data. At first we need the data itself, the following code will download and read it. 
 
 
 ```r
@@ -50,7 +43,7 @@ st_data = as.data.table(read.csv(dest_file))
 
 ### Health casualties
 
-We will split health casualties into two types. First one is deaths and second one is injuries. Our goal is to find out what type of events (EVTYPE) are most dangerous, i.e. lead to the highest deaths and injuries rate. 
+We will split health casualties into two types. First one is deaths and second one is injuries. Our goal is to find out what type of events (EVTYPE) are most dangerous, i.e. leads to the highest deaths and injuries rate. 
 
 Here is calculation amount of deaths for each event...:
 
@@ -101,6 +94,7 @@ head(injuries_dt, n = 10)
 ### Ecomomic impact
 
 In Storm Dataset we can find two types of economic impact, property damage (PROPDMG) and crop damage (CROPDMG). Moreover, this dataset also has two more variables: PROPDMGEXP and CROPDMGEXP, which are coefficients (multipliers) for corresponding value. They can be interpreted as following:  
+
 b, B <-> billion (x1.000.000.000)  
 m, M <-> million (x1.000.000)  
 k, K <-> thousand (x1000)  
@@ -148,8 +142,55 @@ head(total_dmg_dt, n = 10)
 ## Results  
 ### Health impact  
 
+The best way to realize results is to visualize them.  
+
+On two following plots top-10 event with highest death and injuries rate are shown:
 
 
+```r
+plot = ggplot(data = fatalities_dt[1:10,], 
+                aes(x = reorder(EVTYPE, -Total.Fatalities), y = Total.Fatalities)) + 
+    geom_bar(stat="identity") + 
+    labs(title="The total amount of deaths of top-10 most dangerous disasters.", 
+         y = "Amount of deaths", x = "") + 
+    theme_light() + theme(axis.text.x = element_text(angle=90, vjust=0.5, hjust=1))
+print(plot)
+```
 
+![](Storm_Research_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+
+```r
+plot = ggplot(data = injuries_dt[1:10,], 
+                aes(x = reorder(EVTYPE, -Total.Injuries), y = Total.Injuries)) + 
+    geom_bar(stat="identity") + 
+    labs(title="The total amount of injuries of top-10 most dangerous disasters.", 
+         y = "Amount of injeries", x = "") + 
+    theme_light() + theme(axis.text.x = element_text(angle=90, vjust=0.5, hjust=1))
+print(plot)
+```
+
+![](Storm_Research_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
+As we can see, tornados are the most dangerous disasters for population.
+
+Next let's take a look at plot of top-10 events with highest economic impact:
+
+
+```r
+plot = ggplot(data = total_dmg_dt[1:10,], 
+              aes(x = reorder(EVTYPE, -Total), y = Total)) + 
+    geom_bar(stat="identity") + 
+    labs(title="The economical consequences of top-10 most costly disasters.", 
+         y = "Economical damage ($USD)", x = "") + 
+    theme_light() + theme(axis.text.x = element_text(angle=90, vjust=0.5, hjust=1))
+print(plot)
+```
+
+![](Storm_Research_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
+Here we can see that the most costly disaster is flood. It much more expensive than the others.
+
+Thanks for your attention! 
 
 
